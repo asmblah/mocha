@@ -143,6 +143,15 @@ body {
   -webkit-box-shadow: 0 1px 3px #eee;
 }
 
+#mocha #report.fail .suite {
+  display: none;
+}
+
+#mocha #report.fail .suite.fail {
+  display: block;
+}
+
+
 #error {
   color: #c00;
   font-size: 1.5  em;
@@ -173,6 +182,10 @@ body {
   margin: 0 5px;
   list-style: none;
   padding-top: 11px;
+}
+
+#stats a {
+  color: inherit;
 }
 
 code .comment { color: #ddd }

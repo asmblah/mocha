@@ -32,11 +32,11 @@ require.register = function (path, fn){
 require.relative = function (parent) {
     return function(p){
       if ('.' != p.charAt(0)) return require(p);
-      
+
       var path = parent.split('/')
         , segs = p.split('/');
       path.pop();
-      
+
       for (var i = 0; i < segs.length; i++) {
         var seg = segs[i];
         if ('..' == seg) path.pop();
@@ -52,7 +52,7 @@ require.register("browser/debug.js", function(module, exports, require){
 
 module.exports = function(type){
   return function(){
-    
+
   }
 };
 }); // module: browser/debug.js
@@ -497,7 +497,7 @@ var Suite = require('../suite')
 
 /**
  * BDD-style interface:
- * 
+ *
  *      describe('Array', function(){
  *        describe('#indexOf()', function(){
  *          it('should return -1 when not present', function(){
@@ -509,7 +509,7 @@ var Suite = require('../suite')
  *          });
  *        });
  *      });
- * 
+ *
  */
 
 module.exports = function(suite){
@@ -559,7 +559,7 @@ module.exports = function(suite){
      * and callback `fn` containing nested suites
      * and/or tests.
      */
-  
+
     context.describe = context.context = function(title, fn){
       var suite = Suite.create(suites[0], title);
       suites.unshift(suite);
@@ -592,19 +592,19 @@ var Suite = require('../suite')
 
 /**
  * TDD-style interface:
- * 
+ *
  *     exports.Array = {
  *       '#indexOf()': {
  *         'should return -1 when the value is not present': function(){
- *           
+ *
  *         },
  *
  *         'should return the correct index when the value is present': function(){
- *           
+ *
  *         }
  *       }
  *     };
- * 
+ *
  */
 
 module.exports = function(suite){
@@ -664,27 +664,27 @@ var Suite = require('../suite')
 
 /**
  * QUnit-style interface:
- * 
+ *
  *     suite('Array');
- *     
+ *
  *     test('#length', function(){
  *       var arr = [1,2,3];
  *       ok(arr.length == 3);
  *     });
- *     
+ *
  *     test('#indexOf()', function(){
  *       var arr = [1,2,3];
  *       ok(arr.indexOf(1) == 0);
  *       ok(arr.indexOf(2) == 1);
  *       ok(arr.indexOf(3) == 2);
  *     });
- *     
+ *
  *     suite('String');
- *     
+ *
  *     test('#length', function(){
  *       ok('foo'.length == 3);
  *     });
- * 
+ *
  */
 
 module.exports = function(suite){
@@ -727,7 +727,7 @@ module.exports = function(suite){
     /**
      * Describe a "suite" with the given `title`.
      */
-  
+
     context.suite = function(title){
       if (suites.length > 1) suites.shift();
       var suite = Suite.create(suites[0], title);
@@ -765,7 +765,7 @@ var Suite = require('../suite')
  *          suiteSetup(function(){
  *
  *          });
- *          
+ *
  *          test('should return -1 when not present', function(){
  *
  *          });
@@ -1625,8 +1625,9 @@ exports = module.exports = HTML;
 
 var statsTemplate = '<ul id="stats">'
   + '<li class="progress"><canvas width="40" height="40"></canvas></li>'
+  + '<li class="all"><a href="?">all: <em>0</em></a></li>'
   + '<li class="passes">passes: <em>0</em></li>'
-  + '<li class="failures">failures: <em>0</em></li>'
+  + '<li class="failures"><a href="?filter=fail">failures: <em>0</em></a></li>'
   + '<li class="duration">duration: <em>0</em>s</li>'
   + '</ul>';
 
@@ -1646,9 +1647,10 @@ function HTML(runner) {
     , root = document.getElementById('mocha')
     , stat = fragment(statsTemplate)
     , items = stat.getElementsByTagName('li')
-    , passes = items[1].getElementsByTagName('em')[0]
-    , failures = items[2].getElementsByTagName('em')[0]
-    , duration = items[3].getElementsByTagName('em')[0]
+    , all = items[1].getElementsByTagName('em')[0]
+    , passes = items[2].getElementsByTagName('em')[0]
+    , failures = items[3].getElementsByTagName('em')[0]
+    , duration = items[4].getElementsByTagName('em')[0]
     , canvas = stat.getElementsByTagName('canvas')[0]
     , report = fragment('<ul id="report"></ul>')
     , stack = [report]
@@ -1700,6 +1702,10 @@ function HTML(runner) {
     text(failures, stats.failures);
     text(duration, (ms / 1000).toFixed(2));
 
+    if (runner._filter === "fail") {
+      report.classList.add("fail");
+    }
+
     // test
     if ('passed' == test.state) {
       var el = fragment('<li class="test pass %e"><h2>%e<span class="duration">%ems</span></h2></li>', test.speed, test.title, test.duration);
@@ -1724,6 +1730,11 @@ function HTML(runner) {
       }
 
       el.appendChild(fragment('<pre class="error">%e</pre>', str));
+
+      if (runner._filter === "fail") {
+        stack[0].parentNode.classList.add("fail");
+        stack[stack.length - 2].parentNode.classList.add("fail");
+      }
     }
 
     // toggle code
@@ -2439,7 +2450,7 @@ exports = module.exports = Min;
 
 function Min(runner) {
   Base.call(this, runner);
-  
+
   runner.on('start', function(){
     // clear screen
     process.stdout.write('\033[2J');
@@ -2835,7 +2846,7 @@ function XUnit(runner) {
     }, false));
 
     tests.forEach(test);
-    console.log('</testsuite>');    
+    console.log('</testsuite>');
   });
 }
 
@@ -3064,7 +3075,7 @@ Runnable.prototype.run = function(fn){
     }
     return;
   }
-  
+
   // sync
   try {
     if (!this.pending) this.fn.call(ctx);
@@ -3147,6 +3158,12 @@ Runner.prototype.grep = function(re){
   debug('grep %s', re);
   this._grep = re;
   this.total = this.grepTotal(this.suite);
+  return this;
+};
+
+Runner.prototype.filter = function(filter){
+  debug('filter %s', filter);
+  this._filter = filter;
   return this;
 };
 
@@ -3936,7 +3953,7 @@ exports.indexOf = function (arr, obj, start) {
 
 /**
  * Array#reduce (<=IE8)
- * 
+ *
  * @param {Array} array
  * @param {Function} fn
  * @param {Object} initial value
@@ -4216,6 +4233,7 @@ window.mocha = require('mocha');
     var reporter = new Reporter(runner);
     var query = parse(window.location.search || "");
     if (query.grep) runner.grep(new RegExp(query.grep));
+    if (query.filter) runner.filter(query.filter);
     if (options.ignoreLeaks) runner.ignoreLeaks = true;
     if (options.globals) runner.globals(options.globals);
     runner.globals(['location']);
