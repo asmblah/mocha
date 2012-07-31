@@ -147,7 +147,7 @@ body {
   display: none;
 }
 
-#mocha #report.fail .suite.fail {
+#mocha #report.fail .suite.fail, #mocha #report.fail .suite.fail .suite {
   display: block;
 }
 
